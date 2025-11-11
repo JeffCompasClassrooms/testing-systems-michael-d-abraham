@@ -382,6 +382,65 @@ def describe_SquirrelServer_API():
             assert len(remaining) == 1
             assert remaining[0]['name'] == 'KeepFirst'
 
+    def describe_400_bad_request_conditions():
+
+        def it_returns_400_when_creating_squirrel_without_name(server):
+            response = make_request('POST', '/squirrels', {'size': 'medium'})
+            assert response['status_code'] == 400
+
+        def it_returns_400_when_creating_squirrel_without_size(server):
+            response = make_request('POST', '/squirrels', {'name': 'IncompleteSquirrel'})
+            assert response['status_code'] == 400
+
+        def it_returns_400_when_creating_squirrel_with_no_data(server):
+            response = make_request('POST', '/squirrels', {})
+            assert response['status_code'] == 400
+
+        def it_returns_400_when_updating_squirrel_without_name(server):
+            make_request('POST', '/squirrels', {'name': 'ValidSquirrel', 'size': 'small'})
+            records = get_db_records()
+            squirrel_id = records[0]['id']
+            response = make_request('PUT', f'/squirrels/{squirrel_id}', {'size': 'large'})
+            assert response['status_code'] == 400
+
+        def it_returns_400_when_updating_squirrel_without_size(server):
+            make_request('POST', '/squirrels', {'name': 'ValidSquirrel', 'size': 'small'})
+            records = get_db_records()
+            squirrel_id = records[0]['id']
+            response = make_request('PUT', f'/squirrels/{squirrel_id}', {'name': 'UpdatedName'})
+            assert response['status_code'] == 400
+
+        def it_returns_400_when_updating_squirrel_with_no_data(server):
+            make_request('POST', '/squirrels', {'name': 'ValidSquirrel', 'size': 'small'})
+            records = get_db_records()
+            squirrel_id = records[0]['id']
+            response = make_request('PUT', f'/squirrels/{squirrel_id}', {})
+            assert response['status_code'] == 400
+
+        def it_returns_text_plain_content_type_for_400_errors(server):
+            response = make_request('POST', '/squirrels', {'name': 'MissingSize'})
+            assert response['status_code'] == 400
+            assert response['headers']['Content-Type'] == 'text/plain'
+
+        def it_returns_bad_request_message_in_body(server):
+            response = make_request('POST', '/squirrels', {'size': 'medium'})
+            assert response['status_code'] == 400
+            assert '400 Bad Request' in response['body']
+
+        def it_does_not_create_squirrel_in_db_when_data_incomplete(server):
+            make_request('POST', '/squirrels', {'name': 'NoSize'})
+            records = get_db_records()
+            assert len(records) == 0
+
+        def it_does_not_update_squirrel_in_db_when_data_incomplete(server):
+            make_request('POST', '/squirrels', {'name': 'Original', 'size': 'small'})
+            records = get_db_records()
+            squirrel_id = records[0]['id']
+            make_request('PUT', f'/squirrels/{squirrel_id}', {'name': 'Updated'})
+            updated_records = get_db_records()
+            assert updated_records[0]['name'] == 'Original'
+            assert updated_records[0]['size'] == 'small'
+
     def describe_404_error_conditions():
 
         def it_returns_404_for_nonexistent_squirrel_on_retrieve(server):
