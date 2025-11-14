@@ -91,6 +91,10 @@ class SquirrelServerHandler(BaseHTTPRequestHandler):
     def handleSquirrelsCreate(self):
         db = SquirrelDB()
         body = self.getRequestData()
+        # Validate required fields
+        if "name" not in body or "size" not in body:
+            self.handle400()
+            return
         db.createSquirrel(body["name"], body["size"])
         self.send_response(201)
         self.end_headers()
@@ -100,6 +104,10 @@ class SquirrelServerHandler(BaseHTTPRequestHandler):
         squirrel = db.getSquirrel(squirrelId)
         if squirrel:
             body = self.getRequestData()
+            # Validate required fields
+            if "name" not in body or "size" not in body:
+                self.handle400()
+                return
             db.updateSquirrel(squirrelId, body["name"], body["size"])
             self.send_response(204)
             self.end_headers()
@@ -115,6 +123,12 @@ class SquirrelServerHandler(BaseHTTPRequestHandler):
             self.end_headers()
         else:
             self.handle404()
+
+    def handle400(self):
+        self.send_response(400)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(bytes("400 Bad Request", "utf-8"))
 
     def handle404(self):
         self.send_response(404)
