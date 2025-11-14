@@ -17,13 +17,15 @@ jobs:
       with:
         python-version: '3.9'
 
-    - name: Install pytest
+    - name: Install pytest and plugins
       run: |
         python -m pip install --upgrade pip
-        pip install pytest
+        pip install pytest pytest-describe
 
     - name: Verify database seed file exists
       run: ls -la empty_squirrel_db.db
 
     - name: Run system tests
       run: pytest
+
+      
